@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math 24 Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+            transition: all 0.3s;
+        }
+        button {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+        button:hover {
+            background-color: #f8f8f8;
+            border-color: #bbb;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .button-emoji {
+            font-size: 18px;
+        }
+        .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007BFF;
+            margin: 20px 0;
+        }
+        .solution {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #28a745;
+        }
+        .result {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .incorrect {
+            color: #f44336;
+        }
+        .correct {
+            color: #4CAF50;
+        }
+        .emoji {
+            font-size: 30px;
+            margin-right: 10px;
+        }
+        #score {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+        #questionCounter {
+            font-size: 16px;
+            margin-top: 10px;
+            color: #555;
+        }
+        #startButton {
+            background-color: #fff;
+            color: #333;
+            font-size: 18px;
+            cursor: pointer;
+            border: 2px solid #ddd;
+            padding: 14px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        #startButton:hover {
+            background-color: #f8f8f8;
+            border-color: #bbb;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #startButton:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #gameUI {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎲 Math 24 Game 🎲</h2>
+        <button id="startButton" onclick="startGame()">Start Game</button>
+        <div id="gameUI">
+            <p id="numbers" class="number">Numbers: ?</p>
+            <input type="text" id="expression" placeholder="Enter your equation ✍️">
+            <button class="button-emoji" onclick="checkAnswer()">✅ Submit</button>
+            <button class="button-emoji" onclick="generateNumbers()">🔄 New Numbers</button>
+            <button class="button-emoji" onclick="showSolutions()">🔍 Show Solutions</button>
+            <p id="result" class="result"></p>
+            <div id="solutions" class="solution"></div>
+            <div id="score">Score: 0</div>
+            <div id="questionCounter">Correct Answers: 0</div>
+        </div>
+    </div>
+
+    <script>
+        let numbers = [];
+        let score = 0;
+        let correctAnswers = 0;
+
+        function startGame() {
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("gameUI").style.display = "block";
+            generateNumbers();
+        }
+
+        function generateNumbers() {
+            numbers = Array.from({length: 4}, () => Math.floor(Math.random() * 9) + 1);
+            document.getElementById("numbers").innerText = "Numbers: " + numbers.join(", ");
+            document.getElementById("result").innerText = "";
+            document.getElementById("solutions").innerText = "";
+            document.getElementById("expression").value = "";
+            updateScore();
+        }
+
+        function checkAnswer() {
+            let expr = document.getElementById("expression").value;
+            try {
+                let usedNumbers = expr.match(/\d+/g).map(Number);
+                if (!usedNumbers.every(num => numbers.includes(num))) {
+                    document.getElementById("result").innerText = "❌ Incorrect: Use given numbers!";
+                    document.getElementById("result").classList.add('incorrect');
+                    return;
+                }
+                let result = evaluateExpression(expr);
+                if (result === 24) {
+                    score += 10;
+                    correctAnswers++;
+                    document.getElementById("result").innerText = "✅ Correct!";
+                    document.getElementById("result").classList.add('correct');
+                } else {
+                    score -= 5;
+                    document.getElementById("result").innerText = "❌ Incorrect!";
+                    document.getElementById("result").classList.add('incorrect');
+                }
+                updateScore();
+                updateQuestionCounter();
+            } catch {
+                document.getElementById("result").innerText = "⚠️ Invalid expression!";
+            }
+        }
+
+        function evaluateExpression(expr) {
+            return eval(expr);
+        }
+
+        function showSolutions() {
+            let ops = ['+', '-', '*', '/'];
+            let solutions = [];
+            let permute = arr => arr.length === 1 ? [arr] : arr.flatMap((v, i) => permute(arr.slice(0, i).concat(arr.slice(i + 1))).map(p => [v, ...p]));
+            for (let perm of permute(numbers)) {
+                for (let op1 of ops) {
+                    for (let op2 of ops) {
+                        for (let op3 of ops) {
+                            let expr = `${perm[0]} ${op1} ${perm[1]} ${op2} ${perm[2]} ${op3} ${perm[3]}`;
+                            if (Math.abs(evaluateExpression(expr) - 24) < 1e-6) solutions.push(expr);
+                        }
+                    }
+                }
+            }
+            document.getElementById("solutions").innerText = solutions.length ? solutions.slice(0, 5).join(" | ") : "No solutions found!";
+        }
+
+        function updateScore() {
+            document.getElementById("score").innerText = "Score: " + score;
+        }
+
+        function updateQuestionCounter() {
+            document.getElementById("questionCounter").innerText = "Correct Answers: " + correctAnswers;
+        }
+    </script>
+</body>
+</html>
+
